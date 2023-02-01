@@ -2,7 +2,10 @@ package main
 
 import (
 	"bufio"
+	// "flag"
+	"fmt"
 	"strings"
+
 	// "fmt"
 	"log"
 	"os"
@@ -12,10 +15,20 @@ import (
 	"gopkg.in/ini.v1"
 )
 
+type inputs struct {
+	delta     int
+	operation string
+}
+
 func main() {
 
-	var delta int = 190
-	var action string = "+"
+	var inputs inputs
+
+	fmt.Println("Input OPERATION SYMBOL string (+. -, /, *)")
+	fmt.Scan(&inputs.operation)
+
+	fmt.Println("Input DELTA integer (not float)")
+	fmt.Scan(&inputs.delta)
 
 	// Cyclo2.ini
 	cycloFile, err := ini.Load("Cyclo2.ini")
@@ -29,43 +42,9 @@ func main() {
 	// 	log.Fatalf("Error when save backup file: %s", err)
 	// }
 
-	// Switch arithmetic operation
-	switch action {
-	case "+":
-		// Loop every diagramm [section]
-		for _, section := range cycloFile.Sections() {
-			// Take only if diagramm name include "FAGRIP"
-			re, err := regexp.Compile(`.*FAGRIP.*`)
-			if err != nil {
-				log.Fatalf("Open regexp section compile: %s", err)
-			}
-
-			if !re.Match([]byte(section.Name())) {
-				continue
-			}
-
-			// Loop every tension key m_*=
-			for _, sectionKey := range section.Keys() {
-				// Take only if tension key name include m_*
-				re, err := regexp.Compile(`m_\d*`)
-				if err != nil {
-					log.Fatalf("Open regexp key compile: %s", err)
-				}
-
-				if re.Match([]byte(sectionKey.Name())) || sectionKey.Name() == "StopTension" {
-					// Get tension key value
-					keyInt, err := sectionKey.Int()
-					if err != nil {
-						log.Fatalf("Error get key value: %s", err)
-					}
-
-					// And plus to delta
-					sectionKey.SetValue(strconv.Itoa(keyInt + delta))
-				} else {
-					continue
-				}
-			}
-		}
+	err = doOperationDelta(cycloFile, inputs.operation, inputs.delta)
+	if err != nil {
+		log.Fatal("ERR: Operation error")
 	}
 
 	// Write file
@@ -73,8 +52,6 @@ func main() {
 	if err != nil {
 		log.Fatalf("Error when save file: %s", err)
 	}
-
-	// Reopen Cyclo2.ini and trim whitespaces
 
 	// Open the buffer file
 	file, err := os.Open("buffer.ini")
@@ -114,4 +91,61 @@ func main() {
 		log.Fatalf("Error when remove file: %s", err)
 	}
 
+	fmt.Println("DONE! See Cyclo2_result.ini")
+}
+
+// Do operation whith all tension keys "m_*=" in FAGRIP sections Cyclo2.ini file
+func doOperationDelta(cycloFile *ini.File, operation string, delta int) error {
+	// Loop every diagramm [section]
+	for _, section := range cycloFile.Sections() {
+		// Take only if diagramm name include "FAGRIP"
+		re, err := regexp.Compile(`.*FAGRIP.*`)
+		if err != nil {
+			log.Fatalf("Open regexp section compile: %s", err)
+			return err
+		}
+
+		if !re.Match([]byte(section.Name())) {
+			continue
+		}
+
+		// Loop every tension key m_*=
+		for _, sectionKey := range section.Keys() {
+			// Take only if tension key name include m_*
+			re, err := regexp.Compile(`m_\d*`)
+			if err != nil {
+				log.Fatalf("Open regexp key compile: %s", err)
+				return err
+			}
+
+			if re.Match([]byte(sectionKey.Name())) || sectionKey.Name() == "StopTension" {
+				// Get tension key value
+				keyInt, err := sectionKey.Int()
+				if err != nil {
+					log.Fatalf("Error get key value: %s", err)
+					return err
+				}
+
+				switch operation {
+				case "+":
+					// And plus to delta
+					sectionKey.SetValue(strconv.Itoa(keyInt + delta))
+				case "-":
+					// And subtract to delta
+					sectionKey.SetValue(strconv.Itoa(keyInt - delta))
+				case "/":
+					// And devide to delta
+					sectionKey.SetValue(strconv.Itoa(keyInt / delta))
+				case "*":
+					// And multiple to delta
+					sectionKey.SetValue(strconv.Itoa(keyInt * delta))
+				}
+
+			} else {
+				continue
+			}
+		}
+	}
+
+	return nil
 }
