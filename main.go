@@ -16,7 +16,7 @@ import (
 )
 
 type inputs struct {
-	delta     int
+	delta     float64
 	operation string
 }
 
@@ -27,7 +27,7 @@ func main() {
 	fmt.Println("Input OPERATION SYMBOL string (+. -, /, *)")
 	fmt.Scan(&inputs.operation)
 
-	fmt.Println("Input DELTA integer (not float)")
+	fmt.Println("Input DELTA")
 	fmt.Scan(&inputs.delta)
 
 	// Cyclo2.ini
@@ -100,7 +100,7 @@ func main() {
 }
 
 // Do operation whith all tension keys "m_*=" in FAGRIP sections Cyclo2.ini file
-func doOperationDelta(cycloFile *ini.File, operation string, delta int) error {
+func doOperationDelta(cycloFile *ini.File, operation string, delta float64) error {
 	// Loop every diagramm [section]
 	for _, section := range cycloFile.Sections() {
 		// Take only if diagramm name include "FAGRIP"
@@ -125,7 +125,14 @@ func doOperationDelta(cycloFile *ini.File, operation string, delta int) error {
 
 			if re.Match([]byte(sectionKey.Name())) || sectionKey.Name() == "StopTension" {
 				// Get tension key value
-				keyInt, err := sectionKey.Int()
+				// keyInt, err := sectionKey.Int()
+				// if err != nil {
+				// 	log.Fatalf("Error get key value: %s", err)
+				// 	return err
+				// }
+
+				// Get tension key value
+				keyFloat, err := sectionKey.Float64()
 				if err != nil {
 					log.Fatalf("Error get key value: %s", err)
 					return err
@@ -134,18 +141,21 @@ func doOperationDelta(cycloFile *ini.File, operation string, delta int) error {
 				switch operation {
 				case "+":
 					// And plus to delta
-					sectionKey.SetValue(strconv.Itoa(keyInt + delta))
+					stringKey := strconv.Itoa(int(keyFloat + delta))
+					sectionKey.SetValue(stringKey)
 				case "-":
 					// And subtract to delta
-					sectionKey.SetValue(strconv.Itoa(keyInt - delta))
+					stringKey := strconv.Itoa(int(keyFloat - delta))
+					sectionKey.SetValue(stringKey)
 				case "/":
 					// And devide to delta
-					sectionKey.SetValue(strconv.Itoa(keyInt / delta))
+					stringKey := strconv.Itoa(int(keyFloat / delta))
+					sectionKey.SetValue(stringKey)
 				case "*":
 					// And multiple to delta
-					sectionKey.SetValue(strconv.Itoa(keyInt * delta))
+					stringKey := strconv.Itoa(int(keyFloat * delta))
+					sectionKey.SetValue(stringKey)
 				}
-
 			} else {
 				continue
 			}
