@@ -36,12 +36,6 @@ func main() {
 		log.Fatalf("Error when opening file: %s", err)
 	}
 
-	// Create backup file
-	// err = cycloFile.SaveTo("Cyclo2_backup.ini")
-	// if err != nil {
-	// 	log.Fatalf("Error when save backup file: %s", err)
-	// }
-
 	err = doOperationDelta(cycloFile, inputs.operation, inputs.delta)
 	if err != nil {
 		log.Fatal("ERR: Operation error")
