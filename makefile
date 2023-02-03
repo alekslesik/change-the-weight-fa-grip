@@ -18,6 +18,11 @@ help:
 run:
 	go run ./main.go
 
+## build: build the ./main.go application
+.PHONY: build
+build:
+	go build -o WeightChangerFAGRIP/WeightChangerFAGRIP.exe
+
 #=====================================#
 # QUALITY CONTROL #
 #=====================================#

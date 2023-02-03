@@ -85,7 +85,18 @@ func main() {
 		log.Fatalf("Error when remove file: %s", err)
 	}
 
-	fmt.Println("DONE! See Cyclo2_result.ini")
+	fmt.Println("\n\n***DONE! See Cyclo2_result.ini***")
+
+	// quit from terminal
+    scanner := bufio.NewScanner(os.Stdin)
+    for scanner.Scan() {
+        exit := scanner.Text()
+        if exit == "q" {
+            break
+        } else {
+            fmt.Println("Press 'q' to quit")
+        }
+    }
 }
 
 // Do operation whith all tension keys "m_*=" in FAGRIP sections Cyclo2.ini file
